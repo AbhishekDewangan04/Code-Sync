@@ -53,10 +53,10 @@ node server.js
 ## 📸 Screenshots
 
 🏠 Room Creation
-![Room Creation](https://github.com/VedantDewangan/Code-Sync/blob/main/frontend/src/assets/Screenshot%202025-08-03%20215936.png)
+![Room Creation](https://raw.githubusercontent.com/AbhishekDewangan04/code-sync/main/frontend/src/assets/Screenshot%202025-08-03%20215936.png)
 
 👨‍💻 Collaborative Coding
-![Collaborative Editor](https://github.com/VedantDewangan/Code-Sync/blob/main/frontend/src/assets/Screenshot%202025-08-03%20220005.png)
+![Collaborative Editor](https://raw.githubusercontent.com/AbhishekDewangan04/code-sync/main/frontend/src/assets/Screenshot%202025-08-03%20220005.png)
 
 ## 🤝 Contributing
 
@@ -68,4 +68,5 @@ Licensed under the [MIT License](LICENSE).
 Feel free to use, modify, and share with attribution.
 
 ## 👨‍💻 Author
-Built with ❤️ by Vedant Dewangan
+Built with ❤️ by Abhishek Dewangan
+
