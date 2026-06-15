@@ -9,7 +9,12 @@ export default function EditorPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const editorRef = useRef(null);
-  const currentUserName = location.state;
+  const currentUserName =
+location.state?.currentUserName
+||
+location.state
+||
+"Anonymous";
   const [participants, setParticipants] = useState([]);
   const [code, setCode] = useState(`#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    cout << "Hello, C++!" << endl;\n    return 0;\n}`);
   const isRemoteUpdate = useRef(false);
@@ -25,7 +30,10 @@ export default function EditorPage() {
 
   useEffect(() => {
     socket.emit("join-room", { currentUserName, roomId });
-
+    console.log(
+"Joining:",
+currentUserName
+);
     socket.on("new-user-join", (data) => {
       if (data.roomId === roomId) {
         toast.success(`${data.currentUserName} joined the room`);
@@ -36,20 +44,41 @@ export default function EditorPage() {
       setOutput(output);
     });
 
-    socket.on("participants-updated", (updatedList) => {
-      setParticipants(updatedList);
-    });
+    socket.on(
+"participants-updated",
+
+(updatedList)=>{
+
+console.log(
+"Participants:",
+updatedList
+);
+
+setParticipants(
+updatedList
+);
+
+}
+);
 
     socket.on("user-left", (data) => {
       toast.error(`${data.username} left the room`);
     });
 
-    socket.on("code-update", ({ code: incomingCode }) => {
-      if (incomingCode !== code) {
-        isRemoteUpdate.current = true;
-        setCode(incomingCode);
-      }
-    });
+    socket.on(
+"code-update",
+
+({ code: incomingCode }) => {
+
+isRemoteUpdate.current =
+true;
+
+setCode(
+incomingCode
+);
+
+}
+);
 
     socket.on("user-typing", ({ username }) => {
       setSomeoneTyping(`${username} is typing...`);
@@ -58,8 +87,27 @@ export default function EditorPage() {
     socket.on("user-stop-typing", () => {
       setSomeoneTyping("");
     });
+    return () => {
 
+socket.off("new-user-join");
+socket.off("output-updated");
+socket.off("participants-updated");
+socket.off("user-left");
+socket.off("code-update");
+socket.off("user-typing");
+socket.off("user-stop-typing");
+
+if (
+typingTimeout.current
+) {
+clearTimeout(
+typingTimeout.current
+);
+}
+
+};
   }, [roomId, currentUserName]);
+  
 
   const leaveRoom = () => {
     socket.emit("leave-room", { roomId, currentUserName });
@@ -74,7 +122,7 @@ export default function EditorPage() {
       return;
     }
 
-    setCode(value);
+    setCode(value || "");
     socket.emit("code-change", { roomId, code: value });
 
     socket.emit("typing", { roomId, username: currentUserName });
@@ -114,25 +162,25 @@ const handleRunCode = async () => {
         }),
       }
     );
+const result =
+await response.json();
 
-    const result =
-      await response.json();
-
-    const finalOutput =
-      result.run?.stdout ||
-      result.run?.stderr ||
-      "No Output";
+const finalOutput =
+result.run?.stdout ??
+result.run?.stderr ??
+"No Output";
 
     setOutput(finalOutput);
 
-    socket.emit(
-      "output-changed",
-      {
-        roomId,
-        output:
-          finalOutput,
-      }
-    );
+    socket.off("join-room");
+
+socket.emit(
+"join-room",
+{
+currentUserName,
+roomId
+}
+);
 
   } catch (err) {
     setOutput(
@@ -153,7 +201,7 @@ const handleRunCode = async () => {
           <div className="participants-list">
             {participants.map((p, i) => (
               <div key={i} className="avatar-bubble">
-                {p.username.charAt(0).toUpperCase()}
+                {p.username?.charAt(0)?.toUpperCase()}
               </div>
             ))}
           </div>

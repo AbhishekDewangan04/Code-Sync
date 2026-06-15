@@ -135,25 +135,41 @@ io.on(
           ] = [];
         }
 
-        roomParticipants[
-          roomId
-        ].push({
-          socketId:
-            socket.id,
+       const alreadyExists =
+roomParticipants[
+roomId
+].some(
+(p)=>
+p.username ===
+currentUserName
+);
 
-          username:
-            currentUserName,
-        });
+if(
+!alreadyExists
+){
 
-        io.to(
-          roomId
-        ).emit(
-          "new-user-join",
-          {
-            currentUserName,
-            roomId,
-          }
-        );
+roomParticipants[
+roomId
+].push({
+
+socketId:
+socket.id,
+
+username:
+currentUserName
+
+});
+
+}
+        console.log(
+roomParticipants[roomId]
+);
+
+        console.log(
+"Sending participants:",
+roomParticipants[roomId]
+);
+
 
         io.to(
           roomId
@@ -289,15 +305,53 @@ io.on(
     );
 
     socket.on(
-      "disconnect",
+"disconnect",
 
-      () => {
-        console.log(
-          "Disconnected:",
-          socket.id
-        );
-      }
-    );
+() => {
+
+console.log(
+"Disconnected:",
+socket.id
+);
+
+const roomId =
+socket.roomId;
+
+if(
+roomId &&
+roomParticipants[
+roomId
+]
+){
+
+roomParticipants[
+roomId
+]=
+roomParticipants[
+roomId
+].filter(
+(p)=>
+p.socketId
+!==
+socket.id
+);
+
+io
+.to(
+roomId
+)
+.emit(
+"participants-updated",
+
+roomParticipants[
+roomId
+]
+);
+
+}
+
+}
+);
   }
 );
 
