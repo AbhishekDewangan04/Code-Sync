@@ -60,25 +60,17 @@ updatedList
 
 }
 );
+socket.on("user-left", (data) => {
+  toast.error(`${data.username} left the room`);
+});
+socket.on("code-update", ({ code: incomingCode }) => {
+  isRemoteUpdate.current = true;
 
-    socket.on("user-left", (data) => {
-      toast.error(`${data.username} left the room`);
-    });
+  setCode(incomingCode);
 
-    socket.on(
-"code-update",
-
-({ code: incomingCode }) => {
-
-isRemoteUpdate.current =
-true;
-
-setCode(
-incomingCode
-);
-
-}
-);
+  // Force Monaco editor to update instantly
+  
+});
 
     socket.on("user-typing", ({ username }) => {
       setSomeoneTyping(`${username} is typing...`);
@@ -123,7 +115,10 @@ typingTimeout.current
     }
 
     setCode(value || "");
-    socket.emit("code-change", { roomId, code: value });
+    socket.emit("code-change", {
+  roomId,
+  code: value || "",
+});
 
     socket.emit("typing", { roomId, username: currentUserName });
 
@@ -141,8 +136,7 @@ const handleRunCode = async () => {
   setOutput("Running...");
 
   try {
-    const response = await fetch(
-      "http://localhost:5000/execute",
+    const response = await fetch(`${import.meta.env.VITE_BACKEND_API}/execute`,
       {
         method: "POST",
 
@@ -172,15 +166,7 @@ result.run?.stderr ??
 
     setOutput(finalOutput);
 
-    socket.off("join-room");
-
-socket.emit(
-"join-room",
-{
-currentUserName,
-roomId
-}
-);
+    
 
   } catch (err) {
     setOutput(
