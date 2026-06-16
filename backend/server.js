@@ -102,258 +102,106 @@ const io = new Server(
 );
 
 const roomParticipants = {};
+io.on("connection", (socket) => {
 
-io.on(
-  "connection",
-  (socket) => {
-    console.log(
-      "User Connected:",
-      socket.id
+  socket.on("join-room", ({ roomId, currentUserName }) => {
+
+    socket.join(roomId);
+
+    socket.roomId = roomId;
+    socket.username = currentUserName;
+
+    const clients =
+      Array.from(
+        io.sockets.adapter.rooms.get(roomId) || []
+      ).map((id) => ({
+        socketId: id,
+        username:
+          io.sockets.sockets.get(id)?.username
+      }));
+
+    io.to(roomId).emit(
+      "participants-updated",
+      clients
     );
 
-    socket.on(
-      "join-room",
-      ({
-        currentUserName,
+    socket.to(roomId).emit(
+      "new-user-join",
+      {
         roomId,
-      }) => {
+        currentUserName,
+      }
+    );
+  });
 
-        socket.join(
-          roomId
+  socket.on("code-change", ({ roomId, code }) => {
+
+    socket
+      .to(roomId)
+      .emit(
+        "code-update",
+        { code }
+      );
+  });
+
+  socket.on("typing", ({ roomId, username }) => {
+
+    socket
+      .to(roomId)
+      .emit(
+        "user-typing",
+        { username }
+      );
+  });
+
+  socket.on("stop-typing", ({ roomId }) => {
+
+    socket
+      .to(roomId)
+      .emit(
+        "user-stop-typing"
+      );
+  });
+
+  socket.on(
+    "leave-room",
+    ({ roomId }) => {
+
+      socket.leave(roomId);
+
+      const clients =
+        Array.from(
+          io.sockets.adapter.rooms.get(roomId) || []
+        ).map((id) => ({
+          socketId: id,
+          username:
+            io.sockets.sockets.get(id)?.username
+        }));
+
+      io.to(roomId).emit(
+        "participants-updated",
+        clients
+      );
+    }
+  );
+
+  socket.on("disconnect", () => {
+
+    if (socket.roomId) {
+
+      socket
+        .to(socket.roomId)
+        .emit(
+          "user-left",
+          {
+            username:
+              socket.username
+          }
         );
-
-        socket.roomId =
-          roomId;
-
-        if (
-          !roomParticipants[
-            roomId
-          ]
-        ) {
-          roomParticipants[
-            roomId
-          ] = [];
-        }
-
-       const alreadyExists =
-roomParticipants[
-roomId
-].some(
-(p)=>
-p.username ===
-currentUserName
-);
-
-if(
-!alreadyExists
-){
-
-roomParticipants[
-roomId
-].push({
-
-socketId:
-socket.id,
-
-username:
-currentUserName
+    }
+  });
 
 });
-
-}
-        console.log(
-roomParticipants[roomId]
-);
-
-        console.log(
-"Sending participants:",
-roomParticipants[roomId]
-);
-
-
-        io.to(
-          roomId
-        ).emit(
-          "participants-updated",
-          roomParticipants[
-            roomId
-          ]
-        );
-      }
-    );
-
-    socket.on(
-      "leave-room",
-
-      ({ roomId }) => {
-        socket.leave(
-          roomId
-        );
-
-        if (
-          roomParticipants[
-            roomId
-          ]
-        ) {
-          roomParticipants[
-            roomId
-          ] =
-            roomParticipants[
-              roomId
-            ].filter(
-              (p) =>
-                p.socketId !==
-                socket.id
-            );
-
-          io.to(
-            roomId
-          ).emit(
-            "participants-updated",
-            roomParticipants[
-              roomId
-            ]
-          );
-
-          io.to(
-            roomId
-          ).emit(
-            "user-left",
-            {
-              username:
-                "Someone",
-            }
-          );
-        }
-      }
-    );
-
-    socket.on(
-      "code-change",
-
-      ({
-        roomId,
-        code,
-      }) => {
-        socket
-          .to(
-            roomId
-          )
-          .emit(
-            "code-update",
-            {
-              code,
-            }
-          );
-      }
-    );
-
-    socket.on(
-      "typing",
-
-      ({
-        roomId,
-        username,
-      }) => {
-        socket
-          .to(
-            roomId
-          )
-          .emit(
-            "user-typing",
-            {
-              username,
-            }
-          );
-      }
-    );
-
-    socket.on(
-      "stop-typing",
-
-      ({
-        roomId,
-      }) => {
-        socket
-          .to(
-            roomId
-          )
-          .emit(
-            "user-stop-typing"
-          );
-      }
-    );
-
-    socket.on(
-      "output-changed",
-
-      ({
-        roomId,
-        output,
-      }) => {
-        socket
-          .to(
-            roomId
-          )
-          .emit(
-            "output-updated",
-            {
-              output,
-            }
-          );
-      }
-    );
-
-    socket.on(
-"disconnect",
-
-() => {
-
-console.log(
-"Disconnected:",
-socket.id
-);
-
-const roomId =
-socket.roomId;
-
-if(
-roomId &&
-roomParticipants[
-roomId
-]
-){
-
-roomParticipants[
-roomId
-]=
-roomParticipants[
-roomId
-].filter(
-(p)=>
-p.socketId
-!==
-socket.id
-);
-
-io
-.to(
-roomId
-)
-.emit(
-"participants-updated",
-
-roomParticipants[
-roomId
-]
-);
-
-}
-
-}
-);
-  }
-);
 
 // ================= START =================
 
